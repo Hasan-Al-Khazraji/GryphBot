@@ -50,8 +50,9 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		discord.ChannelMessageSend(message.ChannelID, "Good Bye👋")
 	default:
 		discord.MessageReactionAdd(message.ChannelID, message.ID, "\U0001F440")
+		threadName := fmt.Sprintf("\"%s\" -%s", message.Content, message.Author.GlobalName)
 		thread, err := discord.MessageThreadStartComplex(message.ChannelID, message.ID, &discordgo.ThreadStart{
-			Name:      message.Content + " -" + message.Author.Username,
+			Name:      threadName,
 			Invitable: false,
 		})
 		fmt.Println(message.Content)
