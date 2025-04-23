@@ -53,14 +53,6 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		discord.ChannelMessageSend(message.ChannelID, "Good Bye👋")
 	default:
 		discord.MessageReactionAdd(message.ChannelID, message.ID, "\U0001F440")
-		threadName := fmt.Sprintf("\"%s\" -%s", message.Content, message.Author.GlobalName)
-		thread, err := discord.MessageThreadStartComplex(message.ChannelID, message.ID, &discordgo.ThreadStart{
-			Name:      threadName,
-			Invitable: false,
-		})
-		if err != nil {
-			panic(err)
-		}
 
 		ctx := context.Background()
 		client, err := genai.NewClient(ctx, option.WithAPIKey(os.Getenv("GEMINI_API_KEY")))
@@ -100,6 +92,15 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		`+message.Content))
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		threadName := fmt.Sprintf("\"%s\" -%s", message.Content, message.Author.GlobalName)
+		thread, err := discord.MessageThreadStartComplex(message.ChannelID, message.ID, &discordgo.ThreadStart{
+			Name:      threadName,
+			Invitable: false,
+		})
+		if err != nil {
+			panic(err)
 		}
 
 		_, _ = discord.ChannelMessageSend(thread.ID, retriveResponse(resp))
