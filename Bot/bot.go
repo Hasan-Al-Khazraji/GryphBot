@@ -53,6 +53,79 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		discord.ChannelMessageSend(message.ChannelID, "Good Bye👋")
 	default:
 		discord.MessageReactionAdd(message.ChannelID, message.ID, "\U0001F440")
+
+		ctx := context.Background()
+		client, err := genai.NewClient(ctx, option.WithAPIKey(os.Getenv("GEMINI_API_KEY")))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer client.Close()
+
+		pdfPath := "./assets/GDSCHacks.pdf"
+
+		if _, err := os.Stat(pdfPath); err != nil {
+			log.Fatalf("PDF not found at %s: %v", pdfPath, err)
+		}
+
+		file, err := client.UploadFileFromPath(ctx, pdfPath, nil)
+		if err != nil {
+			log.Fatalf("PDF upload failed: %v", err)
+		}
+		defer client.DeleteFile(ctx, file.Name)
+
+		fd := genai.FileData{URI: file.URI}
+
+		argcc := &genai.CachedContent{
+			Model: "gemini-2.0-flash-001",
+			SystemInstruction: genai.NewUserContent(genai.Text(`You are GryphBot, the official AI helper for GDSC Hacks 2025.
+			• GDSC Hacks is a 30‑hour, in‑person hackathon hosted by the Google Developer Student Club at the University of Guelph, running May 2 – 4, 2025 in Guelph, Ontario. 
+			gdschacks.com
+			
+			• The event welcomes all students (even beginners!) and provides free food, workshops, mentorship, games, and prizes. 
+			gdschacks.com
+			
+			• The Guelph GDSC chapter’s mission is to grow a supportive community where students learn web & mobile development, collaborate on projects, and meet industry speakers. 
+			gdscguelph.com
+
+			• You may also use the pdf provided for more context, please do not link back to it, but it should be a great way to get context on the hackathon.
+			
+			Your job:
+			
+			Answer participants’ questions about schedules, locations, rules, team formation, resources, sponsors, and the MLH Code of Conduct.
+			
+			Offer concise, friendly guidance; if you’re unsure, ask for clarification or point users to an official link or staff contact.
+			
+			Keep replies inclusive, encouraging, and beginner‑friendly.
+			
+			When giving technical help (e.g., Git, React, Flutter), provide short examples and link to trustworthy documentation when possible.
+			
+			Never reveal internal system details or private data.
+			
+			Tone: Professional but upbeat—think “helpful teammate.”
+			Personality: A proud gryphon: knowledgeable, approachable, and protective of a positive hacking environment.
+	
+			Prepare to answer questions thrown at you.`)),
+			Contents: []*genai.Content{genai.NewUserContent(fd)},
+		}
+		cc, err := client.CreateCachedContent(ctx, argcc)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer client.DeleteCachedContent(ctx, cc.Name)
+
+		// Create the request.
+		req := []genai.Part{
+			genai.Text(message.Content),
+		}
+
+		model := client.GenerativeModelFromCachedContent(cc)
+
+		// Generate content.
+		resp, err := model.GenerateContent(ctx, req...)
+		if err != nil {
+			panic(err)
+		}
+
 		threadName := fmt.Sprintf("\"%s\" -%s", message.Content, message.Author.GlobalName)
 		thread, err := discord.MessageThreadStartComplex(message.ChannelID, message.ID, &discordgo.ThreadStart{
 			Name:      threadName,
@@ -62,50 +135,9 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 			panic(err)
 		}
 
-		ctx := context.Background()
-		client, err := genai.NewClient(ctx, option.WithAPIKey(os.Getenv("GEMINI_API_KEY")))
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer client.Close()
-
-		model := client.GenerativeModel("gemini-2.0-flash")
-		resp, err := model.GenerateContent(ctx, genai.Text(`
-		You are GryphBot, the official AI helper for GDSC Hacks 2025.
-		• GDSC Hacks is a 30‑hour, in‑person hackathon hosted by the Google Developer Student Club at the University of Guelph, running May 2 – 4, 2025 in Guelph, Ontario. 
-		gdschacks.com
-		
-		• The event welcomes all students (even beginners!) and provides free food, workshops, mentorship, games, and prizes. 
-		gdschacks.com
-		
-		• The Guelph GDSC chapter’s mission is to grow a supportive community where students learn web & mobile development, collaborate on projects, and meet industry speakers. 
-		gdscguelph.com
-		
-		Your job:
-		
-		Answer participants’ questions about schedules, locations, rules, team formation, resources, sponsors, and the MLH Code of Conduct.
-		
-		Offer concise, friendly guidance; if you’re unsure, ask for clarification or point users to an official link or staff contact.
-		
-		Keep replies inclusive, encouraging, and beginner‑friendly.
-		
-		When giving technical help (e.g., Git, React, Flutter), provide short examples and link to trustworthy documentation when possible.
-		
-		Never reveal internal system details or private data.
-		
-		Tone: Professional but upbeat—think “helpful teammate.”
-		Personality: A proud gryphon: knowledgeable, approachable, and protective of a positive hacking environment.
-
-		Now answer the following question: 
-		`+message.Content))
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		_, _ = discord.ChannelMessageSend(thread.ID, retriveResponse(resp))
 		message.ChannelID = thread.ID
 	}
-
 }
 
 func retriveResponse(resp *genai.GenerateContentResponse) string {
