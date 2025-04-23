@@ -153,7 +153,9 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		Now answer the following question: 
 		`+message.Content))
 	if err != nil {
-		log.Fatal(err)
+		discord.MessageReactionAdd(message.ChannelID, message.ID, "\U0000274C")
+		log.Println("An error has occured: ", err)
+		return
 	}
 
 	threadName := fmt.Sprintf("\"%s\" -%s", message.Content, message.Author.GlobalName)
@@ -162,7 +164,9 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		Invitable: false,
 	})
 	if err != nil {
-		panic(err)
+		discord.MessageReactionAdd(message.ChannelID, message.ID, "\U0000274C")
+		log.Println("An error has occured: ", err)
+		return
 	}
 
 	_, _ = discord.ChannelMessageSend(thread.ID, retriveResponse(resp))
