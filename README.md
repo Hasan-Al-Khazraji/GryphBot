@@ -29,7 +29,7 @@
 - **Libraries:**
   - [`bwmarrin/discordgo`](https://github.com/bwmarrin/discordgo) – Discord Gateway & REST client
   - [`google/generative-ai-go`](https://github.com/google/generative-ai-go) – Gemini client SDK
-- **Hosting:** Cloudflare Workers (compiled to WebAssembly via `tinygo`)
+- **Hosting:** Digital Ocean
 
 ## Prerequisites
 

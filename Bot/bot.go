@@ -46,23 +46,22 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		return
 	}
 
-	switch {
-	case strings.Contains(message.Content, "help"):
-		discord.ChannelMessageSend(message.ChannelID, "Hello World😃")
-	case strings.Contains(message.Content, "bye"):
-		discord.ChannelMessageSend(message.ChannelID, "Good Bye👋")
-	default:
-		discord.MessageReactionAdd(message.ChannelID, message.ID, "\U0001F440")
+	// Checks if we are in a thread and does not respond
+	if ch, _ := discord.State.Channel(message.ChannelID); ch.IsThread() {
+		return
+	}
 
-		ctx := context.Background()
-		client, err := genai.NewClient(ctx, option.WithAPIKey(os.Getenv("GEMINI_API_KEY")))
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer client.Close()
+	discord.MessageReactionAdd(message.ChannelID, message.ID, "\U0001F440")
 
-		model := client.GenerativeModel("gemini-2.0-flash")
-		resp, err := model.GenerateContent(ctx, genai.Text(`
+	ctx := context.Background()
+	client, err := genai.NewClient(ctx, option.WithAPIKey(os.Getenv("GEMINI_API_KEY")))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Close()
+
+	model := client.GenerativeModel("gemini-2.0-flash")
+	resp, err := model.GenerateContent(ctx, genai.Text(`
 		You are GryphBot, the official AI helper for GDSC Hacks 2025, a 30-hour in-person hackathon hosted by the Google Developer Student Club at the University of Guelph, running May 2–4, 2025 in Rozanski Hall (ROZH) and the University Centre (UC) in Guelph, Ontario.
 		Websites:
 		Event: gdschacks.com
@@ -153,23 +152,21 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		
 		Now answer the following question: 
 		`+message.Content))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		threadName := fmt.Sprintf("\"%s\" -%s", message.Content, message.Author.GlobalName)
-		thread, err := discord.MessageThreadStartComplex(message.ChannelID, message.ID, &discordgo.ThreadStart{
-			Name:      threadName,
-			Invitable: false,
-		})
-		if err != nil {
-			panic(err)
-		}
-
-		_, _ = discord.ChannelMessageSend(thread.ID, retriveResponse(resp))
-		message.ChannelID = thread.ID
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	threadName := fmt.Sprintf("\"%s\" -%s", message.Content, message.Author.GlobalName)
+	thread, err := discord.MessageThreadStartComplex(message.ChannelID, message.ID, &discordgo.ThreadStart{
+		Name:      threadName,
+		Invitable: false,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	_, _ = discord.ChannelMessageSend(thread.ID, retriveResponse(resp))
+	message.ChannelID = thread.ID
 }
 
 func retriveResponse(resp *genai.GenerateContentResponse) string {
