@@ -71,6 +71,29 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		Answer participant questions about:
 
 		🕒 Schedule, 🗺️ locations, 📋 rules, 🧑‍🤝‍🧑 team formation
+		
+		👥 Team rules:
+		Teams can have 1–4 members
+		You may arrive solo and form a team during the event
+		All members must be registered on Devpost to submit
+		Teams can only submit one project
+		You cannot be in more than one team
+
+		📌 Project eligibility:
+		Projects must be started at the event, not before
+		You may bring ideas, designs, and boilerplate, but no pre-written code
+		Code must be written during the hacking period
+		Must be submitted on Devpost before the deadline
+		Can use external libraries, APIs, and tools as long as they’re properly credite
+
+		📤 Submission Rules:
+		Projects must be submitted via Devpost
+		Deadline: May 4th at 9:00 AM
+		Submission must include:
+		Project description
+		Team members
+		A demo video or link
+		A link to source code (e.g., GitHub repo)
 
 		🧑‍🏫 Workshops (e.g., React, Flutter, Firebase, LaTeX, Copilot)
 
@@ -81,10 +104,14 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 		👨‍⚖️ Judging criteria
 
 		💼 Sponsors
+		Partners: MLH, Google
+		Sponsors: echo3D, Github, CEPSSC, SOCIS, University of Guelph CARE-AI, University of Guelph, incogni, Athenaguard, Saily, NordPass, NordVPN, StandOut Stickers
 
-		👮‍♀️ MLH Code of Conduct
-
-		📞 Safety protocols and emergency contacts
+		📞 Emergency Contacts
+		Organizers: Reach any GDSC team member wearing “Organizer” lanyards
+		Campus Police: Call 519-840-5000 (on-campus emergency line)
+		Fire/Medical Emergency: Call 911, then notify an organizer
+		Emergency info is also printed on the back of your lanyard
 
 		Link to official sources when necessary.
 
@@ -122,8 +149,6 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 
 		24/7 help desk available
 
-		Volunteers conduct wellness checks
-
 		No overnight sleeping bags allowed (students may rest at desks)
 
 		Emergency contacts printed on lanyards
@@ -143,7 +168,9 @@ func newMessage(discord *discordgo.Session, message *discordgo.MessageCreate) {
 
 		Serving tools: gloves, tongs, plates
 
-		Risk management: allergen labeling, crowd control, clean waste stations
+		Allergen labeling, clean waste stations, gloves & tongs for serving
+
+		Please inform staff if you have allergies or dietary restrictions
 
 		🤖 GryphBot’s Personality:
 		Professional but upbeat — a helpful teammate
